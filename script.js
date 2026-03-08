@@ -214,16 +214,16 @@ window.addEventListener('mousemove', (e) => {
 });
 
 // Mobile touch support
-window.addEventListener('touchstart', (e) => {
-    if (e.touches.length > 0) {
+document.addEventListener('touchstart', (e) => {
+    if (e.touches && e.touches.length > 0) {
         mouseX = e.touches[0].clientX;
         mouseY = e.touches[0].clientY;
         isMoving = true;
     }
 }, { passive: true });
 
-window.addEventListener('touchmove', (e) => {
-    if (e.touches.length > 0) {
+document.addEventListener('touchmove', (e) => {
+    if (e.touches && e.touches.length > 0) {
         mouseX = e.touches[0].clientX;
         mouseY = e.touches[0].clientY;
         isMoving = true;
@@ -232,6 +232,7 @@ window.addEventListener('touchmove', (e) => {
 
 window.addEventListener('scroll', () => {
     scrollY = window.scrollY;
+    isMoving = true; // Scrolling feeds raw energy to the network too!
 });
 
 function animate() {
@@ -405,5 +406,13 @@ document.querySelectorAll('.post').forEach(el => {
 
 initNetwork();
 resize();
-window.addEventListener('resize', resize);
+let lastWidth = window.innerWidth;
+window.addEventListener('resize', () => {
+    // Safari iOS fix: Scrolling hides the URL bar, triggering a resize event just for height.
+    // This causes the entire network to recalculate and teleport. We only resize on width changes!
+    if (window.innerWidth !== lastWidth) {
+        lastWidth = window.innerWidth;
+        resize();
+    }
+});
 animate();

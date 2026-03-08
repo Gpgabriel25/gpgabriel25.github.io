@@ -7,7 +7,6 @@ let width, height;
 const layersInfo = [4, 10, 14, 10, 4];
 let layers = [];
 let connections = [];
-let 
 
 // Gentle learning rate, since we now normalize all gradient steps
 const LEARNING_RATE = 0.15; // Boosted so it recovers quickly from the decay state

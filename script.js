@@ -87,13 +87,23 @@ function initNetwork() {
 }
 
 function layoutNetwork() {
+    // Keep it left-to-right, but strictly bound the vertical layout so it isn't completely 'squished' and tall on phones
+    const isMobile = width < 600;
+    
+    // Scale horizontal spacing fully
     const layerSpacing = width / (layersInfo.length + 1);
+    
+    // Hard restrict height on mobile so it stays an elegant horizontal ribbon
+    const layoutHeight = isMobile ? Math.min(height, 450) : height;
     
     layers.forEach((layer, l) => {
         const x = layerSpacing * (l + 1);
-        const nodeSpacing = Math.min(height / (layer.length + 1), 70);
+        
+        let nodeSpacing = Math.min(layoutHeight / (layer.length + 1), 70);
+        
+        // Let it expand slightly past layout height if there are many nodes, but safely centered
         const totalLayerHeight = (layer.length - 1) * nodeSpacing;
-        const startY = (height - totalLayerHeight) / 2;
+        const startY = (height - totalLayerHeight) / 2; // Always center on screen vertically!
         
         layer.forEach((node, i) => {
             node.baseX = x;
@@ -202,6 +212,23 @@ window.addEventListener('mousemove', (e) => {
     mouseY = e.clientY;
     isMoving = true;
 });
+
+// Mobile touch support
+window.addEventListener('touchstart', (e) => {
+    if (e.touches.length > 0) {
+        mouseX = e.touches[0].clientX;
+        mouseY = e.touches[0].clientY;
+        isMoving = true;
+    }
+}, { passive: true });
+
+window.addEventListener('touchmove', (e) => {
+    if (e.touches.length > 0) {
+        mouseX = e.touches[0].clientX;
+        mouseY = e.touches[0].clientY;
+        isMoving = true;
+    }
+}, { passive: true });
 
 window.addEventListener('scroll', () => {
     scrollY = window.scrollY;

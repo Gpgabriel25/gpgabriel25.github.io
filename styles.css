@@ -183,3 +183,23 @@ footer {
     border-top: 1px solid var(--accent-line);
     padding-top: 3rem; /* Extreme padding for ascetic feel */
 }
+
+/* Mobile Adjustments */
+@media (max-width: 600px) {
+    .container {
+        padding: 3rem 1.25rem;
+    }
+    
+    .post {
+        padding: 1.5rem 1rem;
+        background-color: rgba(255, 255, 255, 0.45);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+
+    h1 {
+        display: block;
+        margin-bottom: 1rem;
+    }
+}
+

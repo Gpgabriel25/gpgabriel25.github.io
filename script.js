@@ -152,8 +152,8 @@ function forwardPass(inputs) {
                 sum += conn.source.activation * conn.weight;
                 
                 const contribution = Math.abs(conn.source.activation * conn.weight);
-                if (contribution > 0.5) { 
-                    conn.signalActivity = Math.min(1.2, conn.signalActivity + contribution * 0.5);
+                if (contribution > 0.3) { // Lowered activity threshold so it sparks much easier!
+                    conn.signalActivity = Math.min(1.5, conn.signalActivity + contribution * 0.8);
                     spawnPacket(conn, contribution);
                 }
             });
@@ -248,8 +248,10 @@ function animate() {
     ctx.translate(0, parallaxOffset);
 
     if (isMoving) {
-        const nx = mouseX / width;
-        const ny = mouseY / height;
+        // Tie inputs to both mouse position AND the physical page scroll, 
+        // so mobile flick-scrolling causes massive data cascading even when thumbs let go of the screen!
+        const nx = (mouseX / width) + (scrollY * 0.005);
+        const ny = (mouseY / height) + (scrollY * 0.003);
         
         // Complex, highly volatile shifting inputs tied to both mouse and time
         const phase = time * 0.5;

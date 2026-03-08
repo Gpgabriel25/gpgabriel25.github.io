@@ -1,0 +1,185 @@
+:root {
+    --bg-beige: #f1ede7; /* Reverted to classy, muted pale paper beige */
+    --text-black: #111111;
+    --card-white: rgba(255, 255, 255, 0.35);
+    --meta-gray: #666666;
+    --accent-line: rgba(17, 17, 17, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+::selection {
+    background-color: rgba(0, 0, 0, 0.08);
+    color: currentcolor;
+    text-shadow: none;
+}
+::-moz-selection {
+    background-color: rgba(0, 0, 0, 0.08);
+    color: currentcolor;
+    text-shadow: none;
+}
+
+body {
+    background-color: var(--bg-beige);
+    color: var(--text-black);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: clamp(1rem, 1vw + 0.875rem, 1.125rem);
+    line-height: 2;
+    letter-spacing: -0.015em;
+    position: relative;
+    overflow-x: hidden;
+}
+
+#network-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.85;
+    mix-blend-mode: multiply;
+    animation: fadeInCanvas 2.5s ease-out forwards;
+}
+
+@keyframes fadeInCanvas {
+    0% { opacity: 0; }
+    100% { opacity: 0.85; }
+}
+
+/* Asymmetrical Grid Style Structural Flow */
+.container {
+    max-width: 65ch; /* Strict typographic containment */
+    margin: 0 auto;
+    padding: clamp(4rem, 8vw, 8rem) 1.5rem;
+}
+
+/* Typography */
+h1, h2, h3 {
+    font-family: 'Lora', serif;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: var(--text-black);
+}
+
+h1 {
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    margin-bottom: 0.5rem;
+    position: relative;
+    display: inline-block;
+}
+
+h1::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 24px;
+    height: 3px;
+    background-color: #b43232;
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin-block-start: 4rem;
+    margin-block-end: 2.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--accent-line);
+}
+
+.subtitle {
+    font-size: 0.95rem;
+    color: var(--meta-gray);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+}
+
+.bio {
+    font-size: 1.15rem;
+    color: var(--text-black);
+    font-weight: 300;
+    max-width: 60ch;
+}
+
+.header {
+    margin-bottom: 6rem;
+}
+
+/* Posts Feed */
+.feed {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.post {
+    background-color: var(--card-white);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    padding: clamp(2rem, 5vw, 3.5rem);
+    border: none;
+    border-left: 3px solid var(--text-black);
+    transition: background-color 0.4s ease, border-left-color 0.4s ease;
+}
+
+.post:hover {
+    background-color: rgba(255, 255, 255, 0.6);
+    border-left-color: #b43232; /* Subtle red hover syncs with the neural net */
+}
+
+.post-meta {
+    font-size: 0.8rem;
+    color: var(--meta-gray);
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.post-title {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    margin-bottom: 1rem;
+    letter-spacing: -0.01em;
+    color: var(--text-black);
+}
+
+/* Fluid Unobtrusive Link Transitions */
+.post-title a {
+    color: var(--text-black);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: rgba(0, 0, 0, 0.15);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.4s cubic-bezier(0.22, 0.61, 0.36, 1),
+                text-underline-offset 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.post-title a:hover {
+    text-decoration-color: rgba(0, 0, 0, 0.85);
+    text-underline-offset: 5px;
+}
+
+.post-excerpt {
+    font-size: 1.1rem;
+    color: #2b2b2b;
+    font-weight: 300;
+    line-height: 1.8;
+}
+
+/* Footer */
+footer {
+    margin-top: 8rem;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--meta-gray);
+    border-top: 1px solid var(--accent-line);
+    padding-top: 3rem; /* Extreme padding for ascetic feel */
+}

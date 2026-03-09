@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JAX-PCMCI | Gabriel Garcia</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <style>
+        .post-excerpt { color: rgba(22, 22, 22, 0.88); }
+        .post { background-color: rgba(255, 255, 255, 0.92); }
+    </style>
+</head>
+<body>
+    <canvas id="network-canvas"></canvas>
+    <div class="container">
+        <header class="header post" style="margin-bottom: 4rem; border-left: none; border-top: 5px solid var(--text-black); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background-color: rgba(255, 255, 255, 0.85); padding: clamp(2rem, 5vw, 3.5rem); border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+            <h1 style="margin-bottom: 1rem;"><a href="index.html" style="text-decoration: none; color: inherit;">&larr; Back to Index</a></h1>
+        </header>
+
+        <main class="feed">
+            <div class="post title-card" style="padding: 1rem 2rem; background-color: #111111; color: #f1ede7; border: none; border-radius: 4px;">
+                <h2 style="margin: 0; border: none; padding: 0; color: #f1ede7;">JAX-PCMCI</h2>
+            </div>
+
+            <article class="post">
+                <h3 class="post-title">Causal Discovery in JAX</h3>
+
+                <p class="post-excerpt">A bit of personal history first. When I started out in ML, the only resource I had was a mediocre laptop and Google Colab. I shied away from TPUs for a while; they were hard to program for. Eventually, I tried them, and they were <em>fast</em>. The catch is that programming for TPUs is difficult, but seemingly well worth the effort. With JAX, I found that if I kept looking there was always another optimization to be had. Later, when I switched to Kaggle for compute, I discovered that in Kaggle's old v3-8 cluster just 1 v3 outperformed the P100 they offered for my workload. So I just&hellip; learned to program in JAX. Every time I'd dabble in PyTorch or another eager framework, I'd feel the performance gap and go back to JAX.</p>
+
+                <h4 style="font-family: Lora, serif; margin-top: 2rem; margin-bottom: 0.5rem;">The Problem</h4>
+                <p class="post-excerpt">A long time down the line I ended up working on a study about causal discovery involving an uncommon type of neural network (more details on that will come later). The general gist is that I needed to compare my approach against established methods of causal discovery, and one of the most common baselines is PCMCI. If you're unfamiliar: PCMCI is a two-stage algorithm for time-series data. Given N variables measured over T time steps, it figures out which variables actually <em>cause</em> changes in which others, and at what time delay. Stage one (the PC<sub>1</sub> phase) prunes spurious candidate links through iterative conditional independence tests. Stage two (the MCI phase) re-tests each surviving link while conditioning on the parents of <em>both</em> the source and the target, which screens off confounders and cuts the false-positive rate.</p>
+
+                <p class="post-excerpt">The standard implementation lives in a library called Tigramite. It was horrifically slow for my uses. It's CPU-only, and while it technically supports a GPU-accelerated independence test, that option also happens to just not work. I fought with it for a while before deciding: I'll make my own library.</p>
+
+                <h4 style="font-family: Lora, serif; margin-top: 2rem; margin-bottom: 0.5rem;">Building It</h4>
+                <p class="post-excerpt">The thing that made the rewrite worthwhile is that the core of PCMCI, thousands of conditional independence tests, is "embarrassingly parallel". Each test operates on an independent slice of the data and shares no mutable state with the others. In Tigramite they run sequentially; in JAX, you can <code>vmap</code> a single-test function across the entire batch and run hundreds simultaneously on a GPU. Then <code>jit</code> compiles the pipeline through XLA, fusing operations and killing Python overhead. And because Kaggle offers a T4&times;2 instance, I used <code>pmap</code> to distribute across both GPUs.</p>
+
+                <p class="post-excerpt">I would say there was just one hard part, but there were multiple. If you're curious you can check out the git commits for all of the versions. There were difficulties figuring out when the padding is worthwhile, making it work on all devices (not just the ones I was using) and a couple of other things. Nothing impossible to fix, just a lot of trial and error. The biggest challenge was probably the padding and masking strategy. The number of tests in PCMCI varies wildly based on the data and the stage of the algorithm. In the early PC<sub>1</sub> phase, there are often hundreds of thousands of tests to run, which is perfect for GPU parallelism. But as the algorithm prunes links, the test count can drop to just a few dozen, which leads to underutilization and slow runtimes. My solution was to pad the test batch up to a fixed size (I settled on 512) and mask out the invalid entries.</p>
+
+                <p class="post-excerpt">Memory management was another headache. A naive approach would materialize the full N&times;&tau;&times;N&times;&tau; test matrix at once, blowing past VRAM limits for larger systems. The batching module processes tests in chunks, auto-sizing batches based on available device memory. Numerical stability was a recurring theme too: partial correlations near &plusmn;1 produce infinite Fisher z-values, and the k-NN mutual information estimator can return negative values (a statistical impossibility) when samples are scarce relative to dimensionality. Every test includes clipping, floor values, and degeneracy guards. All of course implemented as branchless JAX operations to stay JIT-friendly.</p>
+
+                <h4 style="font-family: Lora, serif; margin-top: 2rem; margin-bottom: 0.5rem;">The Independence Tests</h4>
+                <p class="post-excerpt">The library comes with four conditional independence tests. <strong>ParCorr</strong> (partial correlation) is the fastest: regress X and Y each on the conditioning set Z, correlate the residuals, and compute a p-value via Fisher's z-transformation. It's a single JIT-compiled function and handles linear dependencies well. <strong>CMI-kNN</strong> captures nonlinear dependencies using the Kraskov-St&ouml;gbauer-Grassberger estimator: find each point's k-th nearest neighbor in the joint (X,Y,Z) space, count neighbors within that radius in the marginals, and take the digamma difference. <strong>CMISymbolic</strong> is a fast discretized alternative for when you need nonlinear detection but can't afford permutation testing. And <strong>GPDCond</strong> fits Gaussian process regressions and runs a distance correlation test on the residuals, which can pick up complex nonlinear structures that the others miss.</p>
+
+                <h4 style="font-family: Lora, serif; margin-top: 2rem; margin-bottom: 0.5rem;">How It Turned Out</h4>
+                <p class="post-excerpt">The result was shockingly good. Even with all the inefficiencies and without the later optimizations, it ran many times faster than Tigramite &mdash; although it was still taking hours for my dataset, so I kept improving it. My first couple of implementations (everything before version 1.3.0) admittedly had flaws that made the whole thing many times slower than it should have been. After a few tricks it reached a state where I struggled to find further optimizations. On a single GPU it runs PCMCI on a 20-variable, 250-timestep system in about 0.12 seconds. PCMCI+ (which adds contemporaneous link discovery) comes in around 0.23 seconds. As an added bonus, the scaling advantage grows with problem size: more variables and deeper lags fill GPU cores that would otherwise sit idle in a sequential implementation.</p>
+
+                <p class="post-excerpt">I figured there might be somebody out there in a similar situation to me. The dataset wasn't that large; it was the sheer number of tests Tigramite needed to run that made it unusable. So I put the library on PyPI, set everything up, and got it working. Ironically enough, for its original purpose it worked a bit too well. It was quite accurate, and the speed of it meant I could no longer claim my method was 47x faster. That being said, it's now more truthful, so I am not particularly mad about it.</p>
+
+                <p class="post-excerpt">I later checked the PyPI download stats and was horrified to discover that a few people were actually using it. Which I was not expecting. That realization was part of what prompted me to make this blog. I'd noticed the JAX-PCMCI GitHub repo hadn't even been indexed by Google yet. So alas, unfortunately the burden of making it somewhat discoverable falls on me.</p>
+
+                <p class="post-excerpt">As for the visual effect, running with the theme of interesting minimalist aesthetics, this is meant to represent the actual PCMCI process. Each column of nodes is a time step, and the charcoal edges between them are the candidate associations that PCMCI considers during the PC<sub>1</sub> phase. The red edges are the ones that survive &mdash; validated causal links that persisted through the conditioning gauntlet. The whole thing scrolls left like time-series data flowing through the algorithm.</p>
+
+                <h4 style="font-family: Lora, serif; margin-top: 2rem; margin-bottom: 0.5rem;">Structural Causal Vocabulary</h4>
+                <p class="post-excerpt"><strong>Time-lagged links.</strong> A causal link X<sub>t&minus;&tau;</sub> &rarr; Y<sub>t</sub> means the state of X at &tau; steps in the past influences the current state of Y. PCMCI systematically tests all such links up to a maximum lag &tau;<sub>max</sub>.</p>
+
+                <p class="post-excerpt"><strong>Graph mutilation.</strong> Pearl's do-calculus formalizes intervention. To compute the effect of forcing X to a value, you "mutilate" the graph &mdash; delete all incoming edges to X. This severs X from its natural causes, isolating only its downstream effects.</p>
+
+                <p class="post-excerpt"><strong>Colliders.</strong> In the structure X &rarr; Z &larr; Y, the node Z is a collider. X and Y are marginally independent &mdash; until you condition on Z, which paradoxically opens a spurious path between them. PCMCI must carefully navigate these structures to avoid both false positives and false negatives.</p>
+
+                <p class="post-excerpt"><strong>Hidden confounders.</strong> A latent common cause Z driving both X and Y creates the illusion of a direct X &rarr; Y link. The conditioning strategy in PCMCI's MCI step is specifically designed to screen off such confounding, provided the confounder's effects are captured by the included variables and time lags.</p>
+            </article>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 Gabriel Garcia. All rights reserved.</p>
+        </footer>
+    </div>
+    <script src="jax-script.js"></script>
+</body>
+</html>

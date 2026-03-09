@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello Blog | Gabriel Garcia</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <canvas id="network-canvas"></canvas>
+    <div class="container">
+        <header class="header post" style="margin-bottom: 4rem; border-left: none; border-top: 5px solid var(--text-black); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background-color: rgba(255, 255, 255, 0.85); padding: clamp(2rem, 5vw, 3.5rem); border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+            <h1 style="margin-bottom: 1rem;"><a href="index.html" style="text-decoration: none; color: inherit;">&larr; Back to Index</a></h1>
+        </header>
+
+        <main class="feed">
+            <div class="post title-card" style="padding: 1rem 2rem; background-color: #111111; color: #f1ede7; border: none; border-radius: 4px;">
+                <h2 style="margin: 0; border: none; padding: 0; color: #f1ede7;">Hello Blog</h2>
+            </div>
+
+            <article class="post">
+                <h3 class="post-title">Hello, World</h3>
+                <p class="post-excerpt">Hello world. So, I have started a blog. The reasons for starting it are various. On the Google TRC cloud website, it said I was expected to share my work with the world, be it via projects, papers, or blog posts. The other reason is that one of my friends did it, and I figured it would be a fun project.</p>
+
+                <p class="post-excerpt">Also because I wanted my stuff to be usable by other people. The number of academic papers that don't link any code is infuriating. I personally believe that concepts are great, but without details of the implementation, it is just useless. As such, you will likely see a lot of my things being open source and free to download on GitHub.</p>
+
+                <h4 style="font-family: Lora, serif; margin-top: 2rem; margin-bottom: 0.5rem;">The Vision</h4>
+                <p class="post-excerpt">The last reason was my specific vision for the layout of a website: something academic but unique, with interesting and semi-related visual effects in the background.</p>
+
+                <p class="post-excerpt">The neural network on the front page I thought would be neat considering a lot of my work is with computers and ML. Seemed like a fitting idea. The first idea was to &ldquo;train&rdquo; a ghostly copy of the user &mdash; essentially give a small neural network your movements and try to predict them. Would be an interesting effect where you train your double. But I figured it would be too difficult, and not exactly mobile-friendly. So I decided on a typical neural network visualization (though I may use the neural network clone idea later if it somehow relates to a project).</p>
+
+                <p class="post-excerpt">As for the background on this page: behind the text is a toy model of packet-switched routing. Nodes drift slowly across the screen, connected by edges. The small red pulses traveling along them are packets &mdash; they spawn, route through the graph, and die. Click or tap near an edge to break it, and the packets will reroute around the damage. Hover over a node to inject local traffic and watch it congest. It's the simplest of the three backgrounds, but I think it captures the idea well.</p>
+
+                <h4 style="font-family: Lora, serif; margin-top: 2rem; margin-bottom: 0.5rem;">Efficiency as a Point of Pride</h4>
+                <p class="post-excerpt">It goes without saying, but I try to make the entire webpage and all of the visual effects as efficient as possible. I try to write optimized code all the time, and it is just a personal point of pride to say my website is thousands of times quicker than another website.</p>
+
+                <p class="post-excerpt">And that's about it. Hopefully you will see more blog posts soon as I end up publishing my projects to arXiv. I have a couple of projects that are nearing completion, so it shouldn't be too long.</p>
+            </article>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 Gabriel Garcia. All rights reserved.</p>
+        </footer>
+    </div>
+    <script src="hello-script.js"></script>
+</body>
+</html>

@@ -1,11 +1,13 @@
 const canvas = document.getElementById('network-canvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d', { alpha: true });
 
-let width, height;
+let width, height, dpr = 1;
+const TWO_PI = Math.PI * 2;
 
 // Network configuration: Larger, more visually impressive topology
 const layersInfo = [4, 10, 14, 10, 4];
 let layers = [];
+let allNodes = [];
 let connections = [];
 
 // Gentle learning rate, since we now normalize all gradient steps
@@ -22,11 +24,14 @@ let isMoving = false;
 let scrollY = 0;
 let time = 0;
 let sleepTimer = 0; // Optimization tracker
+let frameCount = 0;
+const _fwdInputs = new Array(4);
+const _bwdTargets = new Array(4);
 
 function resize() {
     // Robustness optimization: Bound the Max scaling to `2` to prevent memory crashing 
     // the max-texture size on 4k/8k ultrawide ultra-HDPi displays.
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
     width = window.innerWidth;
     height = window.innerHeight;
     
@@ -34,14 +39,17 @@ function resize() {
     canvas.style.height = height + 'px';
     canvas.width = Math.floor(width * dpr);
     canvas.height = Math.floor(height * dpr);
-    
-    ctx.scale(dpr, dpr);
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineCap = 'butt';
+    ctx.lineJoin = 'miter';
     
     layoutNetwork();
 }
 
 function initNetwork() {
     layers = [];
+    allNodes = [];
     connections = [];
     
 
@@ -49,7 +57,7 @@ function initNetwork() {
         let nodeCount = layersInfo[l];
         let layer = [];
         for (let i = 0; i < nodeCount; i++) {
-            layer.push({
+            const node = {
                 layerIndex: l,
                 index: i,
                 activation: 0,
@@ -58,10 +66,12 @@ function initNetwork() {
                 error: 0,
                 baseX: 0, baseY: 0,
                 x: 0, y: 0,
-                phaseOff: Math.random() * Math.PI * 2,
+                phaseOff: Math.random() * TWO_PI,
                 incoming: [], // O(N) optimization: track connections directly on the node
                 outgoing: [] 
-            });
+            };
+            layer.push(node);
+            allNodes.push(node);
         }
         layers.push(layer);
     }
@@ -70,8 +80,10 @@ function initNetwork() {
         let currentLayer = layers[l];
         let nextLayer = layers[l + 1];
         
-        currentLayer.forEach(source => {
-            nextLayer.forEach(target => {
+        for (let si = 0; si < currentLayer.length; si++) {
+            const source = currentLayer[si];
+            for (let ti = 0; ti < nextLayer.length; ti++) {
+                const target = nextLayer[ti];
                 let conn = {
                     source,
                     target,
@@ -81,8 +93,8 @@ function initNetwork() {
                 connections.push(conn);
                 source.outgoing.push(conn);
                 target.incoming.push(conn);
-            });
-        });
+            }
+        }
     }
 }
 
@@ -93,10 +105,12 @@ function layoutNetwork() {
     // Scale horizontal spacing fully
     const layerSpacing = width / (layersInfo.length + 1);
     
-    // Hard restrict height on mobile so it stays an elegant horizontal ribbon
-    const layoutHeight = isMobile ? Math.min(height, 450) : height;
+    // Stretch vertically to a beautiful arbitrary proportion (75% of screen height) 
+    // so it breathes naturally on mobile without hitting the extreme top/bottom edges!
+    const layoutHeight = isMobile ? (height * 0.75) : height;
     
-    layers.forEach((layer, l) => {
+    for (let l = 0; l < layers.length; l++) {
+        const layer = layers[l];
         const x = layerSpacing * (l + 1);
         
         let nodeSpacing = Math.min(layoutHeight / (layer.length + 1), 70);
@@ -105,13 +119,14 @@ function layoutNetwork() {
         const totalLayerHeight = (layer.length - 1) * nodeSpacing;
         const startY = (height - totalLayerHeight) / 2; // Always center on screen vertically!
         
-        layer.forEach((node, i) => {
+        for (let i = 0; i < layer.length; i++) {
+            const node = layer[i];
             node.baseX = x;
             node.baseY = startY + (i * nodeSpacing);
             node.x = node.baseX;
             node.y = node.baseY;
-        });
-    });
+        }
+    }
 }
 
 // Object Pool for Data Packets to prevent GC thrashing
@@ -145,10 +160,14 @@ function forwardPass(inputs) {
     }
 
     for (let l = 1; l < layers.length; l++) {
-        layers[l].forEach(targetNode => {
+        const layer = layers[l];
+        for (let n = 0; n < layer.length; n++) {
+            const targetNode = layer[n];
             let sum = targetNode.bias;
             // Pre-computed lookup destroys the O(N) GC footprint!
-            targetNode.incoming.forEach(conn => {
+            const incoming = targetNode.incoming;
+            for (let ci = 0; ci < incoming.length; ci++) {
+                const conn = incoming[ci];
                 sum += conn.source.activation * conn.weight;
                 
                 const contribution = Math.abs(conn.source.activation * conn.weight);
@@ -156,35 +175,41 @@ function forwardPass(inputs) {
                     conn.signalActivity = Math.min(1.5, conn.signalActivity + contribution * 0.8);
                     spawnPacket(conn, contribution);
                 }
-            });
+            }
             targetNode.activation = sigmoid(sum);
-        });
+        }
     }
 }
 
 function backwardPass(targets) {
     const outputNodes = layers[layers.length - 1];
-    outputNodes.forEach((node, i) => {
+    for (let i = 0; i < outputNodes.length; i++) {
+        const node = outputNodes[i];
         const target = targets[i % targets.length];
         // Using Cross-Entropy equivalent gradient ensures outputs literally NEVER freeze when confident
         node.error = (target - node.activation); 
-    });
+    }
 
     for (let l = layers.length - 2; l >= 0; l--) {
-        layers[l].forEach(sourceNode => {
+        const layer = layers[l];
+        for (let si = 0; si < layer.length; si++) {
+            const sourceNode = layer[si];
             let errorSum = 0;
             // O(1) Adjacency lookup over array-wide filters
-            sourceNode.outgoing.forEach(conn => {
+            const outgoing = sourceNode.outgoing;
+            for (let oi = 0; oi < outgoing.length; oi++) {
+                const conn = outgoing[oi];
                 // To prevent the "dead network" syndrome where decayed 0-weights block 
                 // all learning signals to deep layers, we guarantee a minimum transmission flow.
                 const transWeight = Math.abs(conn.weight) < 0.3 ? (Math.sign(conn.weight || 1) * 0.3) : conn.weight;
                 errorSum += conn.target.error * transWeight;
-            });
+            }
             sourceNode.error = errorSum * dSigmoid(sourceNode.activation);
-        });
+        }
     }
 
-    connections.forEach(conn => {
+    for (let i = 0; i < connections.length; i++) {
+        const conn = connections[i];
         // Gradient tracking
         const rawGrad = conn.target.error * conn.source.activation;
         
@@ -195,15 +220,17 @@ function backwardPass(targets) {
         // Keep weights bounded
         if (conn.weight > 6) conn.weight = 6;
         if (conn.weight < -6) conn.weight = -6;
-    });
+    }
 
     for (let l = 1; l < layers.length; l++) {
-        layers[l].forEach(node => {
+        const layer = layers[l];
+        for (let i = 0; i < layer.length; i++) {
+            const node = layer[i];
             const update = Math.sign(node.error) * LEARNING_RATE * Math.min(Math.abs(node.error * 5), 1.0);
             node.bias += update;
             if (node.bias > 6) node.bias = 6;
             if (node.bias < -6) node.bias = -6;
-        });
+        }
     }
 }
 
@@ -236,16 +263,18 @@ window.addEventListener('scroll', () => {
 });
 
 function animate() {
+    frameCount++;
+    // Throttle to ~30fps when deeply idle (no interaction for >5s)
+    if (sleepTimer > 300 && (frameCount & 1)) {
+        requestAnimationFrame(animate);
+        return;
+    }
     ctx.clearRect(0, 0, width, height);
-
-    ctx.lineCap = 'butt';
-    ctx.lineJoin = 'miter';
 
     time += 0.05;
     const parallaxOffset = -(scrollY * 0.15);
-    
-    ctx.save();
-    ctx.translate(0, parallaxOffset);
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, parallaxOffset * dpr);
 
     if (isMoving) {
         // Tie inputs to both mouse position AND the physical page scroll, 
@@ -255,12 +284,11 @@ function animate() {
         
         // Complex, highly volatile shifting inputs tied to both mouse and time
         const phase = time * 0.5;
-        forwardPass([
-            Math.sin(nx * 10 + phase), 
-            Math.cos(ny * 10 - phase), 
-            Math.sin((nx + ny) * 5), 
-            Math.cos((nx - ny) * 5)
-        ]);
+        _fwdInputs[0] = Math.sin(nx * 10 + phase);
+        _fwdInputs[1] = Math.cos(ny * 10 - phase);
+        _fwdInputs[2] = Math.sin((nx + ny) * 5);
+        _fwdInputs[3] = Math.cos((nx - ny) * 5);
+        forwardPass(_fwdInputs);
         
         // Target functions undulate violently with mouse position. 
         // With Tanh, targets go from -1 to 1 perfectly balancing red and black gradients!
@@ -269,7 +297,11 @@ function animate() {
         const t3 = Math.sin(nx * ny * 20);
         const t4 = Math.cos(nx * 20 + ny * 20 - phase);
         
-        backwardPass([t1, t2, t3, t4]);
+        _bwdTargets[0] = t1;
+        _bwdTargets[1] = t2;
+        _bwdTargets[2] = t3;
+        _bwdTargets[3] = t4;
+        backwardPass(_bwdTargets);
         
         isMoving = false;
         sleepTimer = 0; // Reset sleep timer when moving
@@ -278,37 +310,39 @@ function animate() {
 
         // Absolutely no learning while idle.
         // Node activations organically power down, and structure softly evaporates over ~5 seconds (0.985 ^ 300)
-        layers.forEach(layer => {
-            layer.forEach(node => {
-                node.activation *= 0.99; 
-                node.bias *= 0.99;
-            });
-        });
+        for (let ni = 0; ni < allNodes.length; ni++) {
+            const node = allNodes[ni];
+            node.activation *= 0.99;
+            node.bias *= 0.99;
+        }
 
-        connections.forEach(conn => {
+        for (let ci = 0; ci < connections.length; ci++) {
+            const conn = connections[ci];
             conn.weight *= 0.99;
             // Spontaneous generation: If a weight dies completely, inject a tiny spark of noise 
             // so it's ready to learn if the mouse ever moves again
             if (Math.abs(conn.weight) < 0.2) {
                 conn.weight = Math.sign(conn.weight || 1) * 0.2; // strict floor so it never truly dies
             }
-        });
+        }
     }
 
     // Now update visuals smoothly towards the instantaneous math
-    layers.forEach(layer => {
-        layer.forEach(node => {
-            node.x = node.baseX + Math.sin(time * 0.5 + node.phaseOff) * 4;
-            node.y = node.baseY + Math.cos(time * 0.4 + node.phaseOff) * 4;
-            // Unlink visuals slightly less so it's punchier
-            node.visualActivation += (node.activation - node.visualActivation) * 0.3;
-        });
-    });
+    for (let ni = 0; ni < allNodes.length; ni++) {
+        const node = allNodes[ni];
+        node.x = node.baseX + Math.sin(time * 0.5 + node.phaseOff) * 4;
+        node.y = node.baseY + Math.cos(time * 0.4 + node.phaseOff) * 4;
+        // Unlink visuals slightly less so it's punchier
+        node.visualActivation += (node.activation - node.visualActivation) * 0.3;
+    }
 
     // Draw lines based on weight
-    connections.forEach(conn => {
+    // Track last strokeStyle to skip redundant state changes
+    let _lastStroke = '';
+    for (let ci = 0; ci < connections.length; ci++) {
+        const conn = connections[ci];
         const weightMag = Math.abs(conn.weight);
-        if (weightMag < 0.1) return; 
+        if (weightMag < 0.1) continue;
 
         ctx.beginPath();
         ctx.moveTo(conn.source.x, conn.source.y);
@@ -321,14 +355,15 @@ function animate() {
         const actAlpha = conn.signalActivity * 0.6;
         const alpha = Math.min(baseAlpha + actAlpha, 0.95);
 
-        // Pre-calculated Hex to kill String GC!
-        ctx.globalAlpha = conn.weight > 0 ? alpha : alpha * 0.9;
-        ctx.strokeStyle = conn.weight > 0 ? '#161616' : '#b43232';
+        const _posWeight = conn.weight > 0;
+        ctx.globalAlpha = _posWeight ? alpha : alpha * 0.9;
+        const _newStroke = _posWeight ? '#161616' : '#b43232';
+        if (_newStroke !== _lastStroke) { ctx.strokeStyle = _newStroke; _lastStroke = _newStroke; }
         
         ctx.stroke();
         
         conn.signalActivity = Math.max(0, conn.signalActivity - 0.03);
-    });
+    }
 
     // Draw Data Packets along lines using Object Pool
     for (let i = 0; i < MAX_PACKETS; i++) {
@@ -343,7 +378,7 @@ function animate() {
             const py = p.conn.source.y + (p.conn.target.y - p.conn.source.y) * p.progress;
             
             ctx.beginPath();
-            ctx.arc(px, py, p.size, 0, Math.PI * 2);
+            ctx.arc(px, py, p.size, 0, TWO_PI);
             ctx.globalAlpha = Math.sin(p.progress * Math.PI) * 0.95;
             ctx.fillStyle = p.conn.weight > 0 ? '#161616' : '#b43232'; 
             ctx.fill();
@@ -351,38 +386,39 @@ function animate() {
     }
 
     // Draw solid geometric nodes
-    layers.forEach((layer, l) => {
-        layer.forEach(node => {
+    // Hoist constant state out of the loop
+    ctx.fillStyle = '#161616';
+    ctx.strokeStyle = '#161616';
+    for (let ni = 0; ni < allNodes.length; ni++) {
+        const node = allNodes[ni];
+        ctx.beginPath();
+
+        // Use absolute value of visualActivation since Tanh can be negative
+        const absAct = Math.abs(node.visualActivation);
+        // Increased baseline minimums so nodes (biases) never become physically invisible
+        const radius = 4.5 + (absAct * 2.5);
+        ctx.arc(node.x, node.y, radius, 0, TWO_PI);
+
+        ctx.globalAlpha = 0.4 + (absAct * 0.6);
+        ctx.fill();
+
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = 1.0;
+        ctx.stroke();
+
+        // Smoothed threshold (0.05 instead of 0.3) so glows fade in gently
+        if (absAct > 0.05) {
             ctx.beginPath();
-            
-            // Use absolute value of visualActivation since Tanh can be negative
-            const absAct = Math.abs(node.visualActivation);
-            // Increased baseline minimums so nodes (biases) never become physically invisible
-            const radius = 4.5 + (absAct * 2.5);
-            ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
-            
-            ctx.globalAlpha = 0.4 + (absAct * 0.6);
-            ctx.fillStyle = '#161616';
-            ctx.fill();
-            
-            ctx.lineWidth = 1;
-            ctx.globalAlpha = 1.0;
-            ctx.strokeStyle = '#161616';
+            ctx.arc(node.x, node.y, radius + 4 + (absAct * 2), 0, TWO_PI);
+            ctx.lineWidth = 0.5;
+            ctx.globalAlpha = absAct * 0.8;
             ctx.stroke();
-            
-            // Smoothed threshold (0.05 instead of 0.3) so glows fade in gently
-            if (absAct > 0.05) {
-                ctx.beginPath();
-                ctx.arc(node.x, node.y, radius + 4 + (absAct * 2), 0, Math.PI * 2);
-                ctx.lineWidth = 0.5;
-                ctx.globalAlpha = absAct * 0.8;
-                ctx.stroke();
-            }
-        });
-    });
+            ctx.lineWidth = 1;
+        }
+    }
 
     ctx.globalAlpha = 1.0; // Reset state
-    ctx.restore();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     requestAnimationFrame(animate);
 }

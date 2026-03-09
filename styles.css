@@ -43,7 +43,8 @@ body {
     z-index: -1;
     pointer-events: none;
     opacity: 0.85;
-    mix-blend-mode: multiply;
+    contain: layout paint size style;
+    will-change: opacity;
     animation: fadeInCanvas 2.5s ease-out forwards;
 }
 
@@ -128,6 +129,7 @@ h2 {
     border: none;
     border-left: 3px solid var(--text-black);
     transition: background-color 0.4s ease, border-left-color 0.4s ease;
+    contain: content;
 }
 
 .post:hover {
@@ -180,8 +182,9 @@ footer {
     text-align: center;
     font-size: 0.85rem;
     color: var(--meta-gray);
+    contain: layout paint;
     border-top: 1px solid var(--accent-line);
-    padding-top: 3rem; /* Extreme padding for ascetic feel */
+    padding-top: 3rem; /* Extreme padding for aesthetic feel */
 }
 
 /* Mobile Adjustments */

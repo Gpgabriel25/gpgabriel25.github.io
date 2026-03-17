@@ -25,6 +25,7 @@ let scrollY = 0;
 let time = 0;
 let sleepTimer = 0; // Optimization tracker
 let frameCount = 0;
+let lastFrameTime = 0;
 const _fwdInputs = new Array(4);
 const _bwdTargets = new Array(4);
 
@@ -262,13 +263,16 @@ window.addEventListener('scroll', () => {
     isMoving = true; // Scrolling feeds raw energy to the network too!
 });
 
-function animate() {
+function animate(now) {
     frameCount++;
-    // Throttle to ~30fps when deeply idle (no interaction for >5s)
-    if (sleepTimer > 300 && (frameCount & 1)) {
-        requestAnimationFrame(animate);
-        return;
+    // Time-based throttle: cap at ~30fps when idle (consistent on any refresh rate)
+    if (sleepTimer > 300) {
+        if (now - lastFrameTime < 33) {
+            requestAnimationFrame(animate);
+            return;
+        }
     }
+    lastFrameTime = now;
     ctx.clearRect(0, 0, width, height);
 
     time += 0.05;

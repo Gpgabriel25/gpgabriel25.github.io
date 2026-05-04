@@ -29,15 +29,45 @@
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"></noscript>
     <style>
         #geometry-canvas {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; pointer-events: none;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1; pointer-events: none; opacity: 0.85;
+            contain: layout paint size style; will-change: opacity;
+            animation: fadeInCanvas 2.5s ease-out forwards;
         }
+        @keyframes fadeInCanvas { 0% { opacity: 0; } 100% { opacity: 0.85; } }
+
+        /* Effects toggle — match main site canvas behaviour */
+        html.effects-off #geometry-canvas {
+            opacity: 0 !important; transition: opacity 0.7s ease;
+        }
+        html:not(.effects-off) #geometry-canvas {
+            opacity: 0.85; transition: opacity 0.7s ease;
+        }
+
+        .container { position: relative; z-index: 1; }
+        .post, .title-card { position: relative; z-index: 1; }
         .post-excerpt { color: var(--text-black); }
-        .post { background-color: rgba(255, 255, 255, 0.88); }
+        .post { background-color: rgba(241, 237, 231, 0.78); }
+        .geometry-caption {
+            margin: 1rem 0 1.5rem;
+            padding: 0.75rem 1rem;
+            background: rgba(17, 17, 17, 0.78);
+            color: #f1ede7;
+            border-left: 3px solid #b43232;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
         .key-number { display: inline-block; background: var(--bg-beige); padding: 0.5rem 1rem; border-radius: 3px; margin: 0.2rem 0.4rem 0.2rem 0; font-weight: 600; border-left: 3px solid #b43232; font-size: 0.9rem; }
         .key-numbers { margin: 1rem 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
-        html[data-theme="dark"] .post { background-color: rgba(30, 27, 24, 0.88) !important; }
+        html[data-theme="dark"] .post { background-color: rgba(30, 27, 24, 0.72) !important; }
         html[data-theme="dark"] .key-number { background: rgba(44, 40, 35, 0.7); }
-        html[data-theme="dark"] .post:hover { background-color: rgba(44, 40, 35, 0.95) !important; }
+        html[data-theme="dark"] .post:hover { background-color: rgba(44, 40, 35, 0.92) !important; }
+        html[data-theme="dark"] .geometry-caption { background: rgba(30, 27, 24, 0.85); color: #f1ede7; }
+
+        @media (prefers-reduced-motion: reduce) {
+            #geometry-canvas { animation-duration: 0.01ms !important; }
+        }
     </style>
     <script src="site-controls.js" defer></script>
     <script>try{var _t=localStorage.getItem('theme');if(_t)document.documentElement.setAttribute('data-theme',_t);if(localStorage.getItem('effects')=='off')document.documentElement.classList.add('effects-off');}catch(_e){}</script>
@@ -51,6 +81,9 @@
         <main class="feed">
             <div class="post title-card" style="padding: 1rem 2rem; background-color: #111111; color: #f1ede7; border: none; border-radius: 4px;">
                 <h1 style="margin: 0; border: none; padding: 0; color: #f1ede7; font-size: 1.75rem;">The Right Answer, the Wrong Direction</h1>
+            </div>
+            <div class="geometry-caption">
+                Red dots = count-encoding direction. Blue dots = digit-output direction. The two sets drift toward orthogonal axes - illustrating why the model stores counts in a direction the output head literally cannot read.
             </div>
             <article class="post">
                 <h3 class="post-title">Why transformers fail at counting and how to fix it</h3>
@@ -195,82 +228,87 @@
         const ctx = canvas.getContext('2d');
         let w, h;
         let frame = 0;
-        
+        const EFFECTS_OFF_CLASS = 'effects-off';
+
+        function effectsOff() {
+            return document.documentElement.classList.contains(EFFECTS_OFF_CLASS);
+        }
+
         function resize() {
             w = canvas.width = window.innerWidth;
             h = canvas.height = window.innerHeight;
         }
         resize();
         window.addEventListener('resize', resize);
-        
+
         // Two sets of dots: count-encoding direction (red) and digit-output direction (blue)
-        // Start random, gradually demonstrate orthogonality
-        const N_DOTS = 120;
+        const N_DOTS = 160;
         const dots = [];
         for (let i = 0; i < N_DOTS; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const dist = 40 + Math.random() * Math.min(w, h) * 0.25;
-            dots.push({ angle, dist, color: i < N_DOTS/2 ? '#b43232' : '#4169E1', speed: 0.002 + Math.random() * 0.004, phase: Math.random() * Math.PI * 2 });
+            const dist = 60 + Math.random() * Math.min(w, h) * 0.55;
+            dots.push({
+                angle, dist,
+                color: i < N_DOTS/2 ? '#b43232' : '#4169E1',
+                speed: 0.001 + Math.random() * 0.002,
+                phase: Math.random() * Math.PI * 2,
+                size: 1.8 + Math.random() * 2.2
+            });
         }
-        
+
         function draw() {
+            if (effectsOff()) { requestAnimationFrame(draw); return; }
             frame++;
             ctx.clearRect(0, 0, w, h);
             const cx = w / 2;
             const cy = h / 2;
-            const t = frame * 0.005;
-            
-            ctx.globalAlpha = 0.55;
-            
+            const t = frame * 0.002;
+
+            // Slow, orbital drift — red toward 0°, blue toward 90°
             for (let i = 0; i < dots.length; i++) {
                 const d = dots[i];
                 const isRed = d.color === '#b43232';
-                
-                // Red dots (count direction) drift toward 0° (horizontal right)
-                // Blue dots (digit direction) drift toward 90° (vertical up)
-                // This creates an orthogonal relationship between the two sets
                 const target = isRed ? 0 : Math.PI / 2;
-                
-                // Gentle pull toward target, with noise
-                const pull = Math.sin(t * d.speed + d.phase) * 0.3;
-                d.angle += (target - d.angle) * 0.003 + pull * 0.01;
-                
-                const x = cx + Math.cos(d.angle + t * 0.02) * d.dist * (0.8 + 0.2 * Math.sin(t * 0.3 + d.phase));
-                const y = cy + Math.sin(d.angle + t * 0.02) * d.dist * (0.8 + 0.2 * Math.cos(t * 0.3 + d.phase));
-                
-                const size = 1.5 + 1.5 * Math.sin(t * 0.5 + d.phase);
+
+                // Gentle pull toward target, with slow orbital noise
+                const pull = Math.sin(t * d.speed + d.phase) * 0.15;
+                d.angle += (target - d.angle) * 0.002 + pull * 0.005;
+
+                const r = d.dist * (0.85 + 0.15 * Math.sin(t * 0.15 + d.phase));
+                const x = cx + Math.cos(d.angle + t * 0.008) * r;
+                const y = cy + Math.sin(d.angle + t * 0.008) * r;
+
+                // Dot with subtle glow
                 ctx.beginPath();
-                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.arc(x, y, d.size + 1.5, 0, Math.PI * 2);
                 ctx.fillStyle = d.color;
-                ctx.fill();
-                
-                // Dim connecting line to center
-                ctx.strokeStyle = d.color;
                 ctx.globalAlpha = 0.06;
+                ctx.fill(); // glow
+
                 ctx.beginPath();
-                ctx.moveTo(cx, cy);
-                ctx.lineTo(x, y);
-                ctx.stroke();
-                ctx.globalAlpha = 0.55;
+                ctx.arc(x, y, d.size, 0, Math.PI * 2);
+                ctx.fillStyle = d.color;
+                ctx.globalAlpha = 0.7 + 0.2 * Math.sin(t * 0.3 + d.phase);
+                ctx.fill(); // core
             }
-            
-            // Show the orthogonal relationship with faint axes
-            ctx.globalAlpha = 0.15;
+
+            // Faint orthogonal axes at center
+            ctx.globalAlpha = 0.08;
             ctx.strokeStyle = '#b43232';
             ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(cx - 80, cy);
-            ctx.lineTo(cx + 80, cy);
+            ctx.moveTo(cx - 120, cy);
+            ctx.lineTo(cx + 120, cy);
             ctx.stroke();
-            
+
             ctx.strokeStyle = '#4169E1';
             ctx.beginPath();
-            ctx.moveTo(cx, cy - 80);
-            ctx.lineTo(cx, cy + 80);
+            ctx.moveTo(cx, cy - 120);
+            ctx.lineTo(cx, cy + 120);
             ctx.stroke();
-            
+
             ctx.globalAlpha = 1;
-            
+
             requestAnimationFrame(draw);
         }
         draw();

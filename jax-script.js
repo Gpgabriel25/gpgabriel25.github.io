@@ -140,6 +140,11 @@ document.addEventListener('touchend', () => { hoverX = -9999; hoverY = -9999; },
 
 // --- Main loop ---
 function animate() {
+    if (document.documentElement.classList.contains('effects-off')) {
+        ctx.clearRect(0, 0, width, height);
+        requestAnimationFrame(animate);
+        return;
+    }
     ctx.clearRect(0, 0, width, height);
 
     timeAxis += 0.002 + scrollSpeed;
@@ -151,9 +156,11 @@ function animate() {
     }
 
     // --- Draw edges (batch by type to reduce state changes) ---
+    const _isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const _inkColor = _isDark ? '#d8d3cc' : '#161616';
     // Spurious edges — batched into a single path per fade-in bucket
     ctx.lineWidth = 1;
-    ctx.strokeStyle = '#161616';
+    ctx.strokeStyle = _inkColor;
     ctx.beginPath();
     let batchAlpha = -1;
     for (let i = 0; i < allEdges.length; i++) {
@@ -226,7 +233,7 @@ function animate() {
     // --- Draw columns + nodes ---
     ctx.textAlign = 'center';
     ctx.font = LABEL_FONT;
-    ctx.fillStyle = '#161616';
+    ctx.fillStyle = _inkColor;
     const labelY = height / 2 - (NODE_COUNT / 2) * NODE_SPREAD - 15;
     for (let ci = 0; ci < columns.length; ci++) {
         const c = columns[ci];
@@ -256,7 +263,7 @@ function animate() {
             ctx.beginPath();
             ctx.arc(x, n.y, r, 0, TAU);
             ctx.globalAlpha = baseAlpha;
-            ctx.fillStyle = n.hovered ? '#964137' : '#1e1e1e';
+            ctx.fillStyle = n.hovered ? '#964137' : _inkColor;
             ctx.fill();
 
             // Hover: highlight true causal ancestors

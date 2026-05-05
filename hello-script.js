@@ -28,6 +28,10 @@ let hoverNode = null;
 let lastWidth = 0;
 
 function edgeColorFromGlow(glow) {
+    if (document.documentElement.getAttribute('data-theme') === 'dark') {
+        const b = 175 + ((glow * 55) | 0);
+        return 'rgb(' + b + ',' + (170 + ((glow * 20) | 0)) + ',162)';
+    }
     const r = 22 + ((glow * 80) | 0);
     let style = EDGE_COLOR_CACHE[r];
     if (!style) {
@@ -38,6 +42,9 @@ function edgeColorFromGlow(glow) {
 }
 
 function nodeFillStyle(rv) {
+    if (document.documentElement.getAttribute('data-theme') === 'dark') {
+        return 'rgb(' + (220 - (rv >> 2)) + ',215,208)';
+    }
     let style = NODE_FILL_CACHE[rv];
     if (!style) {
         style = 'rgb(' + rv + ',28,28)';
@@ -239,6 +246,11 @@ function spawnPacketToward(target) {
 
 // --- Animation ---
 function animate() {
+    if (document.documentElement.classList.contains('effects-off')) {
+        ctx.clearRect(0, 0, width, height);
+        requestAnimationFrame(animate);
+        return;
+    }
     ctx.clearRect(0, 0, width, height);
 
     // --- Update edge state ---
@@ -253,7 +265,8 @@ function animate() {
 
     // --- Draw edges: batch idle edges into one stroke call ---
     ctx.beginPath();
-    ctx.strokeStyle = 'rgb(22,22,22)';
+    ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'dark'
+        ? 'rgb(200,195,188)' : 'rgb(22,22,22)';
     ctx.lineWidth = 1;
     ctx.globalAlpha = 0.12;
     for (let i = 0; i < edges.length; i++) {

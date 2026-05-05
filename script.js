@@ -265,6 +265,11 @@ window.addEventListener('scroll', () => {
 
 function animate(now) {
     frameCount++;
+    // If effects are off, skip drawing but keep rAF alive for when they turn back on
+    if (document.documentElement.classList.contains('effects-off')) {
+        requestAnimationFrame(animate);
+        return;
+    }
     // Time-based throttle: cap at ~30fps when idle (consistent on any refresh rate)
     if (sleepTimer > 300) {
         if (now - lastFrameTime < 33) {
@@ -342,6 +347,8 @@ function animate(now) {
 
     // Draw lines based on weight
     // Track last strokeStyle to skip redundant state changes
+    const _isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const _inkColor = _isDark ? '#d8d3cc' : '#161616';
     let _lastStroke = '';
     for (let ci = 0; ci < connections.length; ci++) {
         const conn = connections[ci];
@@ -361,7 +368,7 @@ function animate(now) {
 
         const _posWeight = conn.weight > 0;
         ctx.globalAlpha = _posWeight ? alpha : alpha * 0.9;
-        const _newStroke = _posWeight ? '#161616' : '#b43232';
+        const _newStroke = _posWeight ? _inkColor : '#b43232';
         if (_newStroke !== _lastStroke) { ctx.strokeStyle = _newStroke; _lastStroke = _newStroke; }
         
         ctx.stroke();
@@ -384,15 +391,15 @@ function animate(now) {
             ctx.beginPath();
             ctx.arc(px, py, p.size, 0, TWO_PI);
             ctx.globalAlpha = Math.sin(p.progress * Math.PI) * 0.95;
-            ctx.fillStyle = p.conn.weight > 0 ? '#161616' : '#b43232'; 
+            ctx.fillStyle = p.conn.weight > 0 ? _inkColor : '#b43232'; 
             ctx.fill();
         }
     }
 
     // Draw solid geometric nodes
     // Hoist constant state out of the loop
-    ctx.fillStyle = '#161616';
-    ctx.strokeStyle = '#161616';
+    ctx.fillStyle = _inkColor;
+    ctx.strokeStyle = _inkColor;
     for (let ni = 0; ni < allNodes.length; ni++) {
         const node = allNodes[ni];
         ctx.beginPath();

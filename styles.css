@@ -1,9 +1,24 @@
 :root {
-    --bg-beige: #f1ede7; /* Reverted to classy, muted pale paper beige */
+    --bg-beige: #f1ede7;
     --text-black: #111111;
     --card-white: rgba(255, 255, 255, 0.35);
     --meta-gray: #666666;
     --accent-line: rgba(17, 17, 17, 0.1);
+    --accent-red: #b43232;
+    /* Used in 404 / misc inline refs */
+    --text-gray: #555555;
+    --accent: var(--text-black);
+}
+
+[data-theme="dark"] {
+    --bg-beige: #100f0d;
+    --text-black: #f1ede7;
+    --card-white: rgba(255, 245, 235, 0.04);
+    --meta-gray: #9a9a9a;
+    --accent-line: rgba(255, 255, 255, 0.08);
+    --accent-red: #cf5b5b;
+    --text-gray: #aaaaaa;
+    --accent: var(--text-black);
 }
 
 * {
@@ -32,6 +47,7 @@ body {
     letter-spacing: -0.015em;
     position: relative;
     overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #network-canvas {
@@ -83,7 +99,7 @@ h1::after {
     left: 0;
     width: 24px;
     height: 3px;
-    background-color: #b43232;
+    background-color: var(--accent-red);
 }
 
 h2 {
@@ -120,29 +136,27 @@ h2 {
     border-top: 5px solid var(--text-black);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    background-color: rgba(255, 255, 255, 0.85);
+    background-color: rgba(255, 255, 255, 0.72);
     padding: clamp(2rem, 5vw, 3.5rem);
     border-radius: 4px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
     margin-bottom: 4rem;
 }
 
-/* Title card — dark heading block at top of feed */
-.title-card {
-    padding: 1rem 2rem;
-    background-color: #111111;
-    color: #f1ede7;
-    border: none !important;
-    border-radius: 4px;
+/* Index hero heading */
+.header.post h1 {
+    margin-bottom: 1rem;
 }
 
-.title-card h1,
-.title-card h2,
-.title-card h3 {
-    margin: 0;
-    border: none;
-    padding: 0;
-    color: #f1ede7;
+/* Back-navigation link inside blog post headers */
+.header.post .back-nav {
+    margin-bottom: 0;
+}
+
+/* Compact headers that only contain the back-navigation link */
+.header.post:has(> .back-nav:only-child) {
+    padding: 1.15rem 1.35rem;
+    margin-bottom: 2rem;
 }
 
 /* Posts Feed */
@@ -165,7 +179,46 @@ h2 {
 
 .post:hover {
     background-color: rgba(255, 255, 255, 0.6);
-    border-left-color: #b43232; /* Subtle red hover syncs with the neural net */
+    border-left-color: var(--accent-red); /* Subtle red hover syncs with the neural net */
+}
+
+/* Title card — inverted accent block (placed after .post to win specificity) */
+.post.title-card {
+    background-color: #111111;
+    color: #f1ede7;
+    border: none !important;
+    border-left: none !important;
+    padding: 1rem 2rem;
+    border-radius: 4px;
+}
+
+.post.title-card:hover {
+    background-color: #111111;
+    border-left-color: transparent !important;
+}
+
+.post.title-card h1,
+.post.title-card h2,
+.post.title-card h3 {
+    margin: 0;
+    border: none;
+    padding: 0;
+    color: #f1ede7;
+    font-size: 1.75rem;
+}
+
+/* Back-nav header on blog posts */
+.back-nav {
+    margin-bottom: 0.65rem;
+}
+
+/* Section sub-headings inside articles */
+.post h4 {
+    font-family: Lora, Georgia, serif;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
 }
 
 .post-meta {
@@ -202,7 +255,8 @@ h2 {
 
 .post-excerpt {
     font-size: 1.1rem;
-    color: #2b2b2b;
+    color: var(--text-black);
+    opacity: 0.7;
     font-weight: 300;
     line-height: 1.8;
 }
@@ -216,6 +270,7 @@ footer {
     contain: layout paint;
     border-top: 1px solid var(--accent-line);
     padding-top: 3rem; /* Extreme padding for aesthetic feel */
+    padding-bottom: 70vh; /* Keep a reveal zone below content for the canvas effects */
 }
 
 /* Mobile Adjustments */
@@ -235,5 +290,179 @@ footer {
         display: block;
         margin-bottom: 1rem;
     }
+}
+
+/* Back navigation link */
+.back-link,
+.back-link:visited {
+    color: var(--text-black);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.back-link:hover {
+    opacity: 0.65;
+}
+
+/* ─── Effects toggle ──────────────────────────────────────── */
+/* When effects are off, hide all canvas animations instantly */
+.effects-off #network-canvas {
+    display: none !important;
+}
+
+/* ─── Dark mode overrides ─────────────────────────────────── */
+[data-theme="dark"] body {
+    background-color: var(--bg-beige);
+}
+
+[data-theme="dark"] .header.post {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-top-color: var(--text-black);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .post {
+    background-color: var(--card-white);
+    border-left-color: rgba(241, 237, 231, 0.25);
+}
+
+[data-theme="dark"] .post:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-left-color: var(--accent-red);
+}
+
+[data-theme="dark"] .post.title-card {
+    background-color: #f1ede7;
+    color: #111111;
+    border-left: none !important;
+}
+
+[data-theme="dark"] .post.title-card:hover {
+    background-color: #f1ede7;
+}
+
+[data-theme="dark"] .post.title-card h1,
+[data-theme="dark"] .post.title-card h2,
+[data-theme="dark"] .post.title-card h3 {
+    color: #111111;
+}
+
+[data-theme="dark"] .post-excerpt {
+    opacity: 0.75;
+}
+
+[data-theme="dark"] .post-title a {
+    color: var(--text-black);
+    text-decoration-color: rgba(241, 237, 231, 0.2);
+}
+
+[data-theme="dark"] .post-title a:hover {
+    text-decoration-color: rgba(241, 237, 231, 0.8);
+}
+
+[data-theme="dark"] footer {
+    border-top-color: var(--accent-line);
+}
+
+/* Blog post content in dark mode */
+[data-theme="dark"] a {
+    color: var(--text-black); /* var resolves to #f1ede7 in dark mode */
+}
+
+[data-theme="dark"] code,
+[data-theme="dark"] pre {
+    background-color: rgba(255, 255, 255, 0.07);
+}
+
+/* Global link color — inherits from CSS var so dark mode works automatically */
+a {
+    color: var(--text-black);
+}
+
+/* Inline code and code blocks */
+code {
+    background-color: rgba(17, 17, 17, 0.06);
+    padding: 0.15em 0.45em;
+    border-radius: 3px;
+    font-size: 0.875em;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+pre {
+    background-color: rgba(17, 17, 17, 0.06);
+    padding: 1.25rem 1.5rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    font-size: 0.875em;
+    line-height: 1.7;
+}
+
+pre code {
+    background: none;
+    padding: 0;
+}
+
+/* Transition all themed elements smoothly */
+.header.post, .post, .title-card, footer, a, code, pre {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* ─── Site controls (dark mode / effects toggle buttons) ─── */
+.site-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.site-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.35em 0.85em;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--meta-gray);
+    background: transparent;
+    border: 1px solid var(--accent-line);
+    border-radius: 2rem;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+    line-height: 1;
+}
+
+.site-toggle:hover {
+    color: var(--text-black);
+    border-color: rgba(17, 17, 17, 0.35);
+    background-color: rgba(17, 17, 17, 0.04);
+}
+
+.site-toggle:focus-visible {
+    outline: 2px solid var(--text-black);
+    outline-offset: 2px;
+}
+
+[data-theme="dark"] .site-toggle {
+    color: var(--meta-gray);
+    border-color: var(--accent-line);
+}
+
+[data-theme="dark"] .site-toggle:hover {
+    color: var(--text-black);
+    border-color: rgba(241, 237, 231, 0.35);
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.toggle-icon {
+    font-size: 0.9em;
+    line-height: 1;
 }
 

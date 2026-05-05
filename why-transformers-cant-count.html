@@ -47,9 +47,8 @@
             opacity: 0.85; transition: opacity 0.7s ease;
         }
 
-        .key-number { display: inline-block; background: var(--bg-beige); padding: 0.5rem 1rem; border-radius: 3px; margin: 0.2rem 0.4rem 0.2rem 0; font-weight: 600; border-left: 3px solid #b43232; font-size: 0.9rem; }
+        .key-number { display: inline-block; background: var(--bg-beige); padding: 0.5rem 1rem; border-radius: 3px; margin: 0.2rem 0.4rem 0.2rem 0; font-weight: 600; border-left: 3px solid var(--accent-red); font-size: 0.9rem; }
         .key-numbers { margin: 1rem 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
-        .back-link, .back-link:visited { color: var(--text-black) !important; }
 
         @media (prefers-reduced-motion: reduce) {
             #geometry-canvas { animation-duration: 0.01ms !important; }
@@ -61,11 +60,11 @@
     <canvas id="geometry-canvas"></canvas>
     <div class="container">
         <header class="header post">
-            <nav style="margin-bottom: 1rem;"><a class="back-link" href="index.html" style="text-decoration: none; font-size: 1.1rem;">&larr; Back to Index</a></nav>
+            <nav class="back-nav"><a class="back-link" href="index.html">&larr; Back to Index</a></nav>
         </header>
         <main class="feed">
-            <div class="title-card">
-                <h1 style="font-size: 1.75rem;">The Right Answer, the Wrong Direction</h1>
+            <div class="post title-card">
+                <h1>The Right Answer, the Wrong Direction</h1>
             </div>
             <article class="post">
                 <h3 class="post-title">Why transformers fail at counting and how to fix it</h3>
@@ -76,7 +75,7 @@
                     The surprise was what happened when I looked inside.
                 </p>
 
-                <h4 style="font-family: Lora, serif; margin-top: 2rem; margin-bottom: 0.5rem;">The Thing That Shouldn't Be Possible</h4>
+                <h4>The Thing That Shouldn't Be Possible</h4>
                 <p class="post-excerpt">
                     I trained linear probes on the model's hidden states. Simple ridge regression. For every layer, for every position, can a linear function read the count from the internal representation? The answer was yes. In fact, R² > 0.99 from layer two onward. The model stores the count accurately, precisely, and redundantly through all 36 layers.
                 </p>
@@ -93,7 +92,7 @@
                     The recent Godey and Artzi paper had caught my attention a while back. They showed that the LM head, the final projection from hidden states to vocabulary tokens, acts as a gradient bottleneck during training. Backpropagating through it compresses gradients, suppressing 95 to 99 percent of the update signal. When I started probing the internal representations and noticed this strange misalignment, I wondered whether it might be a consequence of that same bottleneck. A direction the model learned to write into during training, but never learned to read from.
                 </p>
 
-                <h4 style="font-family: Lora, serif; margin-top: 2rem; margin-bottom: 0.5rem;">The Geometry of Silence</h4>
+                <h4>The Geometry of Silence</h4>
                 <p class="post-excerpt">
                     Quick background on how language model output works. The final hidden state lives in a 4096-dimensional vector space. The output head is a weight matrix where each row corresponds to one token in the vocabulary. The dot product between the hidden state and each token row determines which token gets produced next. Simple.
                 </p>
@@ -107,7 +106,7 @@
                     The answer: |cos| ≤ 0.032 across all layers. Across four different probing methods. Across three model families. To calibrate that number, two random vectors in 4096-dimensional space have an expected cosine of about 0.012. The count direction is essentially indistinguishable from random with respect to the digit output rows. The model stores the count, but it stores it in a direction the output mechanism literally cannot see.
                 </p>
 
-                <h4 style="font-family: Lora, serif; margin-top: 2rem; margin-bottom: 0.5rem;">The Test</h4>
+                <h4>The Test</h4>
                 <p class="post-excerpt">
                     If this diagnosis is right, a very specific intervention should work. Fix the digit rows of the output head. Touch nothing else.
                 </p>
@@ -129,7 +128,7 @@
                     But alas there's a catch.
                 </p>
 
-                <h4 style="font-family: Lora, serif; margin-top: 2rem; margin-bottom: 0.5rem;">The Catch</h4>
+                <h4>The Catch</h4>
                 <p class="post-excerpt">
                     The 9-row repair works beautifully under constrained next-token evaluation. But if I let the model generate freely (normal autoregressive decoding), accuracy drops to 0.0%. The model produces chain of thought reasoning instead of a digit. "Let's see, I need to count the cats..."
                 </p>
@@ -144,7 +143,7 @@
                     <strong>A quick aside on two techniques I use below.</strong> <em>LoRA</em> (Low-Rank Adaptation) is a method for fine-tuning large models cheaply. Instead of updating the full weight matrices (millions of parameters), you train two small matrices whose product is added to the original weights. Only a tiny fraction of parameters change, and the rest of the model stays frozen. <em>Logit lens</em> is simpler: you take the hidden state from any intermediate layer and multiply it directly by the final output projection (the lm_head). This tells you what the model would predict if it stopped at that layer. A window into what each layer "thinks" the answer is.
                 </p>
 
-                <h4 style="font-family: Lora, serif; margin-top: 2rem; margin-bottom: 0.5rem;">The Fix That Actually Works</h4>
+                <h4>The Fix That Actually Works</h4>
                 <p class="post-excerpt">
                     To make counting work in real generation, you need to go upstream. LoRA rank-16 applied to Q/V attention projections (7.67M parameters, 200 training steps):
                 </p>
@@ -160,7 +159,7 @@
                     The mechanism is cleanly verified at three points. At layer 2 (where counts are encoded), LoRA leaves the probe direction unchanged. At layer 35 (what the output head reads from), ridge probe R² rises from 0.974 to 0.998. At the logit lens level, rank drops from 55,980 to 1. LoRA doesn't change what gets encoded. It changes how the encoded signal reaches the output.
                 </p>
 
-                <h4 style="font-family: Lora, serif; margin-top: 2rem; margin-bottom: 0.5rem;">The Honest Failures</h4>
+                <h4>The Honest Failures</h4>
                 <p class="post-excerpt">
                     This paper went through some painful corrections before converging.
                 </p>
@@ -171,7 +170,7 @@
                     And then there was the pipeline figure. A simple diagram showing the bottleneck flow took eight iterations to get right. The connectors kept overlapping. The arrows detached. The boxes wouldn't center. Getting it right took more effort than any figure reasonably should.
                 </p>
 
-                <h4 style="font-family: Lora, serif; margin-top: 2rem; margin-bottom: 0.5rem;">What This Means Beyond Counting</h4>
+                <h4>What This Means Beyond Counting</h4>
                 <p class="post-excerpt">
                     I think the readout bottleneck is general. The pattern is:
                 </p>
@@ -189,7 +188,7 @@
                     The implication: many reasoning failures in language models may be less about missing internal computation and more about readout geometry. The model computes useful intermediate variables but stores them in directions the output mechanism can't easily access. Probe success alone is not enough evidence that a model can use a variable at generation time.
                 </p>
 
-                <h4 style="font-family: Lora, serif; margin-top: 2rem; margin-bottom: 0.5rem;">The Paper</h4>
+                <h4>The Paper</h4>
                 <p class="post-excerpt">
                     <strong>"The Right Answer, the Wrong Direction: Why Transformers Fail at Counting and How to Fix It"</strong><br>
                     NeurIPS 2026 submission.
@@ -208,7 +207,7 @@
                 </p>
             </article>
         </main>
-        <footer style="padding-bottom: 70vh;">
+        <footer>
             <p>&copy; 2026 Gabriel Garcia. All rights reserved.</p>
         </footer>
     </div>

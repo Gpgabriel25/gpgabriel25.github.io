@@ -7,19 +7,32 @@
     <title>The Right Answer, the Wrong Direction | Gabriel Garcia</title>
     <meta name="description" content="How I found that transformers know the answer but can't say it, and what a geometric readout bottleneck means for LLM reliability.">
     <link rel="canonical" href="https://gpgabriel25.github.io/why-transformers-cant-count.html">
+    <!-- Open Graph -->
     <meta property="og:type" content="article">
     <meta property="og:title" content="The Right Answer, the Wrong Direction — Gabriel Garcia">
     <meta property="og:description" content="Transformers know the answer. They just point it in the wrong direction.">
     <meta property="og:url" content="https://gpgabriel25.github.io/why-transformers-cant-count.html">
     <meta property="og:site_name" content="Gabriel Garcia">
+    <meta property="og:image" content="https://gpgabriel25.github.io/images/favicon.svg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="The Right Answer, the Wrong Direction — Gabriel Garcia">
+    <meta name="twitter:description" content="Transformers know the answer. They just point it in the wrong direction.">
+    <meta name="twitter:image" content="https://gpgabriel25.github.io/images/favicon.svg">
+    <!-- Structured Data -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
       "headline": "The Right Answer, the Wrong Direction",
-      "description": "How I found that transformers know the answer but can't say it.",
+      "description": "How I found that transformers know the answer but can't say it, and what a geometric readout bottleneck means for LLM reliability.",
       "url": "https://gpgabriel25.github.io/why-transformers-cant-count.html",
-      "author": { "@type": "Person", "name": "Gabriel Garcia" }
+      "author": {
+        "@type": "Person",
+        "name": "Gabriel Garcia"
+      }
     }
     </script>
     <link rel="stylesheet" href="styles.css">
@@ -27,47 +40,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"></noscript>
-    <style>
-        #geometry-canvas {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: -1; pointer-events: none; opacity: 0.85;
-            contain: layout paint size style; will-change: opacity;
-            animation: fadeInCanvas 2.5s ease-out forwards;
-        }
-        @keyframes fadeInCanvas { 0% { opacity: 0; } 100% { opacity: 0.85; } }
-
-        /* Disable backdrop-filter to prevent particle smear */
-        .post, .header.post { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
-
-        /* Effects toggle */
-        html.effects-off #geometry-canvas {
-            opacity: 0 !important; transition: opacity 0.7s ease;
-        }
-        html:not(.effects-off) #geometry-canvas {
-            opacity: 0.85; transition: opacity 0.7s ease;
-        }
-
-        .key-number { display: inline-block; background: var(--bg-beige); padding: 0.5rem 1rem; border-radius: 3px; margin: 0.2rem 0.4rem 0.2rem 0; font-weight: 600; border-left: 3px solid #b43232; font-size: 0.9rem; }
-        .key-numbers { margin: 1rem 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
-        .back-link, .back-link:visited { color: var(--text-black) !important; }
-
-        @media (prefers-reduced-motion: reduce) {
-            #geometry-canvas { animation-duration: 0.01ms !important; }
-        }
-    </style>
-    <script src="site-controls.js" defer></script>
     <script>try{var _t=localStorage.getItem('theme');if(_t)document.documentElement.setAttribute('data-theme',_t);if(localStorage.getItem('effects')=='off')document.documentElement.classList.add('effects-off');}catch(_e){}</script>
 </head>
 <body>
     <canvas id="geometry-canvas"></canvas>
     <div class="container">
-        <header class="header post" style="border-left: none; border-top: 5px solid var(--text-black); margin-bottom: 4rem;">
-            <nav style="margin-bottom: 1rem;"><a class="back-link" href="index.html" style="text-decoration: none; font-size: 1.1rem;">&larr; Back to Index</a></nav>
+        <header class="header post" style="margin-bottom: 4rem; border-left: none; border-top: 5px solid var(--text-black); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background-color: rgba(255, 255, 255, 0.85); padding: clamp(2rem, 5vw, 3.5rem); border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+            <nav style="margin-bottom: 1rem;"><a href="index.html" style="text-decoration: none; color: inherit; font-size: 1.1rem;">&larr; Back to Index</a></nav>
         </header>
+
         <main class="feed">
             <div class="post title-card" style="padding: 1rem 2rem; background-color: #111111; color: #f1ede7; border: none; border-radius: 4px;">
                 <h1 style="margin: 0; border: none; padding: 0; color: #f1ede7; font-size: 1.75rem;">The Right Answer, the Wrong Direction</h1>
             </div>
+
             <article class="post">
                 <h3 class="post-title">Why transformers fail at counting and how to fix it</h3>
                 <p class="post-excerpt">
@@ -209,11 +195,16 @@
                 </p>
             </article>
         </main>
+
         <footer>
             <p>&copy; 2026 Gabriel Garcia. All rights reserved.</p>
         </footer>
     </div>
-    <script>
+    <style>
+        .key-number { display: inline-block; background: var(--bg-beige); padding: 0.5rem 1rem; border-radius: 3px; margin: 0.2rem 0.4rem 0.2rem 0; font-weight: 600; border-left: 3px solid #b43232; font-size: 0.9rem; }
+        .key-numbers { margin: 1rem 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+<script>
     (function() {
         const canvas = document.getElementById('geometry-canvas');
         const ctx = canvas.getContext('2d');
@@ -349,5 +340,6 @@
         draw();
     })();
     </script>
+    <script src="site-controls.js" defer></script>
 </body>
 </html>

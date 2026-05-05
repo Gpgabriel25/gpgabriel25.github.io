@@ -36,11 +36,8 @@
         }
         @keyframes fadeInCanvas { 0% { opacity: 0; } 100% { opacity: 0.85; } }
 
-        /* Make posts opaque so canvas particles don't bleed through */
-        html[data-theme="dark"] .post { background-color: #1a1714 !important; }
-        html[data-theme="dark"] .header.post { background-color: #1a1714 !important; box-shadow: none !important; }
-        .post { background-color: var(--bg-beige) !important; }
-        .header.post { background-color: var(--bg-beige) !important; box-shadow: none !important; }
+        /* Disable backdrop-filter to prevent particle smear */
+        .post, .header.post { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 
         /* Effects toggle */
         html.effects-off #geometry-canvas {
@@ -52,6 +49,7 @@
 
         .key-number { display: inline-block; background: var(--bg-beige); padding: 0.5rem 1rem; border-radius: 3px; margin: 0.2rem 0.4rem 0.2rem 0; font-weight: 600; border-left: 3px solid #b43232; font-size: 0.9rem; }
         .key-numbers { margin: 1rem 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        .back-link, .back-link:visited { color: var(--text-black) !important; }
 
         @media (prefers-reduced-motion: reduce) {
             #geometry-canvas { animation-duration: 0.01ms !important; }
@@ -64,7 +62,7 @@
     <canvas id="geometry-canvas"></canvas>
     <div class="container">
         <header class="header post" style="border-left: none; border-top: 5px solid var(--text-black); margin-bottom: 4rem;">
-            <nav style="margin-bottom: 1rem;"><a href="index.html" style="text-decoration: none; color: inherit; font-size: 1.1rem;">&larr; Back to Index</a></nav>
+            <nav style="margin-bottom: 1rem;"><a class="back-link" href="index.html" style="text-decoration: none; font-size: 1.1rem;">&larr; Back to Index</a></nav>
         </header>
         <main class="feed">
             <div class="post title-card" style="padding: 1rem 2rem; background-color: #111111; color: #f1ede7; border: none; border-radius: 4px;">
@@ -242,7 +240,7 @@
         });
 
         // Two perpendicular streams — sparse, no glow
-        const N_RED = 40, N_BLUE = 40;
+        const N_RED = 55, N_BLUE = 55;
         const particles = [];
 
         function spawnRed() {
@@ -337,7 +335,7 @@
                 }
 
                 // Core particle (no blur-inducing glow)
-                const alpha = 0.3 + 0.2 * Math.sin(frame * 0.025 + p.phase);
+                const alpha = 0.35 + 0.25 * Math.sin(frame * 0.025 + p.phase);
                 ctx.globalAlpha = alpha;
                 ctx.beginPath();
                 ctx.arc(px, py, p.size, 0, Math.PI * 2);

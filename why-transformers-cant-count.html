@@ -49,8 +49,6 @@
 
         .key-number { display: inline-block; background: var(--bg-beige); padding: 0.5rem 1rem; border-radius: 3px; margin: 0.2rem 0.4rem 0.2rem 0; font-weight: 600; border-left: 3px solid #b43232; font-size: 0.9rem; }
         .key-numbers { margin: 1rem 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
-        .title-card { background-color: #111111 !important; color: #f1ede7 !important; border: none !important; border-radius: 4px; padding: 1rem 2rem; }
-        .title-card h1, .title-card h2 { color: #f1ede7 !important; }
         .back-link, .back-link:visited { color: var(--text-black) !important; }
 
         @media (prefers-reduced-motion: reduce) {
@@ -62,12 +60,12 @@
 <body>
     <canvas id="geometry-canvas"></canvas>
     <div class="container">
-        <header class="header post" style="border-left: none; border-top: 5px solid var(--text-black); margin-bottom: 4rem;">
+        <header class="header post">
             <nav style="margin-bottom: 1rem;"><a class="back-link" href="index.html" style="text-decoration: none; font-size: 1.1rem;">&larr; Back to Index</a></nav>
         </header>
         <main class="feed">
-            <div class="title-card" style="padding: 1rem 2rem; background-color: #111111; color: #f1ede7; border: none; border-radius: 4px;">
-                <h1 style="margin: 0; border: none; padding: 0; color: #f1ede7; font-size: 1.75rem;">The Right Answer, the Wrong Direction</h1>
+            <div class="title-card">
+                <h1 style="font-size: 1.75rem;">The Right Answer, the Wrong Direction</h1>
             </div>
             <article class="post">
                 <h3 class="post-title">Why transformers fail at counting and how to fix it</h3>

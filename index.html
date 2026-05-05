@@ -40,12 +40,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>try{var _t=localStorage.getItem('theme');if(_t)document.documentElement.setAttribute('data-theme',_t);if(localStorage.getItem('effects')=='off')document.documentElement.classList.add('effects-off');}catch(_e){}</script>
 </head>
 <body>
     <canvas id="network-canvas"></canvas>
     
     <div class="container">
-        <header class="header post" style="margin-bottom: 4rem; border-left: none; border-top: 5px solid var(--text-black); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background-color: rgba(255, 255, 255, 0.85); padding: clamp(2rem, 5vw, 3.5rem); border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+        <header class="header post">
             <h1 style="margin-bottom: 1rem;">Gabriel Garcia</h1>
             <p class="subtitle">Independent Researcher | gpgabriel25</p>
             <p class="bio">
@@ -54,8 +55,8 @@
         </header>
 
         <main class="feed">
-            <div class="post title-card" style="padding: 1rem 2rem; background-color: #111111; color: #f1ede7; border: none; border-radius: 4px;">
-                <h2 style="margin: 0; border: none; padding: 0; color: #f1ede7;">Research &amp; Notes</h2>
+            <div class="post title-card">
+                <h2>Research &amp; Notes</h2>
             </div>
 
             <article class="post">
@@ -83,5 +84,6 @@
     </div>
 
     <script src="script.js" defer></script>
+    <script src="site-controls.js" defer></script>
 </body>
 </html>

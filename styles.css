@@ -57,7 +57,7 @@ body {
 .container {
     max-width: 65ch; /* Strict typographic containment */
     margin: 0 auto;
-    padding: clamp(4rem, 8vw, 8rem) 1.5rem;
+    padding: 2rem 1.5rem clamp(4rem, 8vw, 8rem);
 }
 
 /* Typography */
@@ -112,6 +112,37 @@ h2 {
 
 .header {
     margin-bottom: 6rem;
+}
+
+/* Post header box — shared across all blog posts and index */
+.header.post {
+    border-left: none;
+    border-top: 5px solid var(--text-black);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background-color: rgba(255, 255, 255, 0.85);
+    padding: clamp(2rem, 5vw, 3.5rem);
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    margin-bottom: 4rem;
+}
+
+/* Title card — dark heading block at top of feed */
+.title-card {
+    padding: 1rem 2rem;
+    background-color: #111111;
+    color: #f1ede7;
+    border: none !important;
+    border-radius: 4px;
+}
+
+.title-card h1,
+.title-card h2,
+.title-card h3 {
+    margin: 0;
+    border: none;
+    padding: 0;
+    color: #f1ede7;
 }
 
 /* Posts Feed */
@@ -190,7 +221,7 @@ footer {
 /* Mobile Adjustments */
 @media (max-width: 600px) {
     .container {
-        padding: 3rem 1.25rem;
+        padding: 1.5rem 1.25rem clamp(3rem, 6vw, 6rem);
     }
     
     .post {

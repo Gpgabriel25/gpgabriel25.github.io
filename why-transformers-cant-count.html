@@ -4,22 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <title>The Right Answer, the Wrong Direction | Gabriel Garcia</title>
-    <meta name="description" content="How I found that transformers know the answer but can't say it, and what a geometric readout bottleneck means for LLM reliability.">
+    <title>The Right Answer, the Wrong Direction: Why Transformers Fail at Counting | Gabriel Garcia</title>
+    <meta name="description" content="Discover why transformers struggle with counting despite encoding the answer internally. Explore geometric readout bottlenecks, probe-generalization gaps, and LoRA-based fixes with reproducible PyTorch experiments.">
+    <meta name="keywords" content="transformers, counting, interpretability, geometric bottleneck, LLM failures, neural networks, mechanistic interpretability, LoRA, attention mechanism">
     <link rel="canonical" href="https://gpgabriel25.github.io/why-transformers-cant-count.html">
     <meta property="og:type" content="article">
-    <meta property="og:title" content="The Right Answer, the Wrong Direction — Gabriel Garcia">
-    <meta property="og:description" content="Transformers know the answer. They just point it in the wrong direction.">
+    <meta property="og:title" content="The Right Answer, the Wrong Direction: Why Transformers Fail at Counting">
+    <meta property="og:description" content="Why transformers encode correct answers but fail to output them. A deep dive into geometric readout bottlenecks and how to fix them with LoRA.">
     <meta property="og:url" content="https://gpgabriel25.github.io/why-transformers-cant-count.html">
     <meta property="og:site_name" content="Gabriel Garcia">
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="The Right Answer, the Wrong Direction: Why Transformers Fail at Counting">
+    <meta name="twitter:description" content="Why transformers encode correct answers but fail to output them. A deep dive into geometric readout bottlenecks and how to fix them with LoRA.">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
-      "headline": "The Right Answer, the Wrong Direction",
-      "description": "How I found that transformers know the answer but can't say it.",
+      "headline": "The Right Answer, the Wrong Direction: Why Transformers Fail at Counting and How to Fix It",
+      "description": "A mechanistic analysis of why transformers encode correct answers but fail to output them, with experimental evidence and LoRA-based fixes.",
       "url": "https://gpgabriel25.github.io/why-transformers-cant-count.html",
-      "author": { "@type": "Person", "name": "Gabriel Garcia" }
+      "mainEntity": "https://arxiv.org/abs/2605.03258",
+      "datePublished": "2026-05-09",
+      "keywords": "transformers, counting, interpretability, geometric bottleneck, LLM failures, mechanistic interpretability, LoRA",
+      "author": { "@type": "Person", "name": "Gabriel Garcia", "url": "https://gpgabriel25.github.io" },
+      "publisher": { "@type": "Organization", "name": "Gabriel Garcia" }
     }
     </script>
     <link rel="stylesheet" href="styles.css">
@@ -188,18 +197,20 @@
                     The implication: many reasoning failures in language models may be less about missing internal computation and more about readout geometry. The model computes useful intermediate variables but stores them in directions the output mechanism can't easily access. Probe success alone is not enough evidence that a model can use a variable at generation time.
                 </p>
 
-                <h4>The Paper</h4>
+                <h4>The Paper & Code</h4>
                 <p class="post-excerpt">
                     <strong>"The Right Answer, the Wrong Direction: Why Transformers Fail at Counting and How to Fix It"</strong><br>
-                    NeurIPS 2026 submission.
+                    Published on arXiv May 2026.
                 </p>
                 <p class="post-excerpt">
-                    <a href="https://github.com/Gpgabriel25/GeometricReadoutBottleneck" style="color: #b43232;">Full paper (arXiv, 26 pages) on GitHub</a>
+                    <a href="https://arxiv.org/abs/2605.03258" style="color: #b43232;">Read the full paper on arXiv</a>
                     &bull;
-                    <a href="https://github.com/Gpgabriel25/GeometricReadoutBottleneck/tree/main/supplement" style="color: #b43232;">Reproduction package</a>
+                    <a href="https://github.com/Gpgabriel25/GeometricReadoutBottleneck" style="color: #b43232;">Full code repository</a>
+                    &bull;
+                    <a href="https://github.com/Gpgabriel25/GeometricReadoutBottleneck/tree/main/experiments" style="color: #b43232;">Reproducible experiments</a>
                 </p>
                 <p class="post-excerpt">
-                    All experiments reproducible in PyTorch on CPU. No GPUs needed.
+                    <strong>All experiments are fully reproducible in PyTorch on CPU. No GPUs needed.</strong> Code, data, and trained models are available in the repository.
                 </p>
 
                 <p class="post-excerpt">
